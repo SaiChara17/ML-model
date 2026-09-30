@@ -1,108 +1,129 @@
 import numpy as np
 import os
 import argparse
+import pickle
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 import tensorflow as tf
-from data_gen import generate_synthetic_data
+
 from data_cwru import load_cwru_data
 from data_mimii import load_mimii_data
-from preprocessing.features import fuse_features
+from data_ib import load_ib_data
+from preprocessing.features import extract_vibration_features, extract_acoustic_features
 from models.anomaly_detector import build_autoencoder
 from models.fault_classifier import build_classifier
 
-def main(dataset='synthetic'):
+def main(dataset='cwru'):
     print(f"\n========================================================")
-    print(f"--- Running Pipeline with {dataset.upper()} Dataset ---")
+    print(f"--- Running V2 Academic Pipeline: {dataset.upper()} Dataset ---")
     print(f"========================================================\n")
     
-    if dataset == 'synthetic':
-        print("Generating synthetic data...")
-        normal_aud, normal_vib, normal_labels = generate_synthetic_data(num_samples=200, state='normal')
-        imb_aud, imb_vib, imb_labels = generate_synthetic_data(num_samples=100, state='imbalance')
-        brg_aud, brg_vib, brg_labels = generate_synthetic_data(num_samples=100, state='bearing_fault')
-        
-    elif dataset == 'cwru':
-        print("Loading CWRU Bearing Dataset (Downloading if needed)...")
-        cwru_aud, cwru_vib, cwru_labels = load_cwru_data()
-        normal_idx = cwru_labels == 0
-        normal_aud, normal_vib, normal_labels = cwru_aud[normal_idx], cwru_vib[normal_idx], cwru_labels[normal_idx]
-        
-        fault_idx = cwru_labels != 0
-        imb_aud, imb_vib, imb_labels = cwru_aud[fault_idx], cwru_vib[fault_idx], cwru_labels[fault_idx]
-        brg_aud, brg_vib, brg_labels = [], [], [] # All faults combined above
-        
+    # 1. Dataset Loader & Feature Extraction
+    if dataset == 'cwru':
+        raw_data, labels = load_cwru_data()
+        extract_fn = extract_vibration_features
     elif dataset == 'mimii':
-        print("Loading MIMII Acoustic Dataset...")
-        mimii_aud, mimii_vib, mimii_labels = load_mimii_data()
-        normal_idx = mimii_labels == 0
-        normal_aud, normal_vib, normal_labels = mimii_aud[normal_idx], mimii_vib[normal_idx], mimii_labels[normal_idx]
-        
-        fault_idx = mimii_labels != 0
-        imb_aud, imb_vib, imb_labels = mimii_aud[fault_idx], mimii_vib[fault_idx], mimii_labels[fault_idx]
-        brg_aud, brg_vib, brg_labels = [], [], []
-        
+        raw_data, labels = load_mimii_data()
+        extract_fn = extract_acoustic_features
+    elif dataset == 'ib':
+        raw_data, labels = load_ib_data()
+        extract_fn = extract_vibration_features
     else:
         print("Invalid dataset choice.")
         return
 
-    print("Extracting features...")
-    # Process Normal Data
-    normal_features = np.array([fuse_features(a, v) for a, v in zip(normal_aud, normal_vib)])
+    if len(raw_data) == 0:
+        print(f"Error: No data found for {dataset.upper()}.")
+        return
+
+    print("Extracting advanced mathematical features...")
+    features = np.array([extract_fn(chunk) for chunk in raw_data])
+    input_dim = features.shape[1]
     
-    # Process Fault Data
-    all_fault_aud = np.concatenate([imb_aud, brg_aud]) if len(brg_aud) > 0 else imb_aud
-    all_fault_vib = np.concatenate([imb_vib, brg_vib]) if len(brg_vib) > 0 else imb_vib
-    all_fault_labels = np.concatenate([imb_labels, brg_labels]) if len(brg_labels) > 0 else imb_labels
+    # 2. Strict Train/Val/Test Split (70/15/15)
+    print("Splitting data (70% Train, 15% Validation, 15% Test)...")
+    X_temp, X_test, y_temp, y_test = train_test_split(features, labels, test_size=0.15, random_state=42)
+    X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.1764, random_state=42) # 0.1764 of 0.85 = 0.15
     
-    fault_features = np.array([fuse_features(a, v) for a, v in zip(all_fault_aud, all_fault_vib)])
+    # 3. Scaling (StandardScaler)
+    print("Applying StandardScaler (Fit on Train only)...")
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_val_scaled = scaler.transform(X_val)
+    X_test_scaled = scaler.transform(X_test)
     
-    input_dim = normal_features.shape[1]
-    
-    print(f"Feature Vector Dimension: {input_dim}")
-    
-    # --- STAGE 1: Train Anomaly Detector (Autoencoder) ---
-    print("\n--- Training Stage 1: Autoencoder (Anomaly Detection) ---")
-    autoencoder = build_autoencoder(input_dim)
-    autoencoder.fit(normal_features, normal_features, 
-                    epochs=20, batch_size=16, 
-                    validation_split=0.2, verbose=1)
-    
-    reconstructions = autoencoder.predict(normal_features)
-    mse = np.mean(np.power(normal_features - reconstructions, 2), axis=1)
-    threshold = np.percentile(mse, 95)
-    print(f"Anomaly Threshold calculated at: {threshold:.4f}")
-    
-    # --- STAGE 2: Train Fault Classifier ---
-    print("\n--- Training Stage 2: Classifier (Fault Diagnosis) ---")
-    classifier = build_classifier(input_dim, num_classes=3)
-    
-    all_features = np.concatenate([normal_features, fault_features])
-    all_labels = np.concatenate([normal_labels, all_fault_labels])
-    
-    classifier.fit(all_features, all_labels, 
-                   epochs=20, batch_size=16, 
-                   validation_split=0.2, verbose=1)
-    
-    # Save models
-    print("\nSaving models...")
     os.makedirs('saved_models', exist_ok=True)
-    autoencoder.save('saved_models/autoencoder.keras')
-    classifier.save('saved_models/classifier.keras')
+    with open('saved_models/scaler.pkl', 'wb') as f:
+        pickle.dump(scaler, f)
+        
+    # --- STAGE 1: Autoencoder (Anomaly Detection) ---
+    print("\n--- Training Stage 1: Autoencoder (Anomaly Detection) ---")
+    normal_train = X_train_scaled[y_train == 0]
+    normal_val = X_val_scaled[y_val == 0]
     
-    print("\nConverting models to TensorFlow Lite (.tflite)...")
+    autoencoder = build_autoencoder(input_dim)
+    autoencoder.fit(normal_train, normal_train, epochs=20, batch_size=16, validation_data=(normal_val, normal_val), verbose=0)
+    
+    # Dynamic Thresholding (using Validation Max Error)
+    reconstructions_val = autoencoder.predict(normal_val, verbose=0)
+    mse_val = np.mean(np.power(normal_val - reconstructions_val, 2), axis=1)
+    dynamic_threshold = np.max(mse_val) * 1.05 # Add 5% buffer
+    print(f"Dynamic Anomaly Threshold calculated at: {dynamic_threshold:.4f}")
+    
+    # --- STAGE 2: Fault Classifier Baselines ---
+    print("\n--- Training Stage 2: Classifier Baselines ---")
+    
+    # Model A: Multi-Layer Perceptron (Our Neural Network)
+    print("Training MLP (Neural Network)...")
+    num_classes = len(np.unique(labels))
+    mlp_classifier = build_classifier(input_dim, num_classes=num_classes)
+    mlp_classifier.fit(X_train_scaled, y_train, epochs=20, batch_size=16, validation_data=(X_val_scaled, y_val), verbose=0)
+    
+    # Model B: Random Forest (Academic Baseline)
+    print("Training Random Forest (Baseline)...")
+    rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+    rf_classifier.fit(X_train_scaled, y_train)
+    
+    # --- EVALUATION ---
+    print("\n========================================================")
+    print(f"--- TEST SET EVALUATION ({dataset.upper()}) ---")
+    print(f"========================================================\n")
+    
+    # MLP Evaluation
+    mlp_preds = np.argmax(mlp_classifier.predict(X_test_scaled, verbose=0), axis=1)
+    print("== Neural Network (MLP) Metrics ==")
+    print(f"Accuracy:  {accuracy_score(y_test, mlp_preds):.4f}")
+    print(f"Precision: {precision_score(y_test, mlp_preds, average='weighted', zero_division=0):.4f}")
+    print(f"Recall:    {recall_score(y_test, mlp_preds, average='weighted', zero_division=0):.4f}")
+    print(f"F1-Score:  {f1_score(y_test, mlp_preds, average='weighted', zero_division=0):.4f}")
+    
+    # Random Forest Evaluation
+    rf_preds = rf_classifier.predict(X_test_scaled)
+    print("\n== Random Forest (Baseline) Metrics ==")
+    print(f"Accuracy:  {accuracy_score(y_test, rf_preds):.4f}")
+    print(f"Precision: {precision_score(y_test, rf_preds, average='weighted', zero_division=0):.4f}")
+    print(f"Recall:    {recall_score(y_test, rf_preds, average='weighted', zero_division=0):.4f}")
+    print(f"F1-Score:  {f1_score(y_test, rf_preds, average='weighted', zero_division=0):.4f}")
+    
+    # --- TFLITE CONVERSION ---
+    print("\nConverting Neural Networks to TensorFlow Lite (.tflite)...")
+    autoencoder.save('saved_models/autoencoder.keras')
+    mlp_classifier.save('saved_models/classifier.keras')
+    
     converter_ae = tf.lite.TFLiteConverter.from_keras_model(autoencoder)
-    tflite_ae = converter_ae.convert()
     with open('saved_models/autoencoder.tflite', 'wb') as f:
-        f.write(tflite_ae)
+        f.write(converter_ae.convert())
         
-    converter_clf = tf.lite.TFLiteConverter.from_keras_model(classifier)
-    tflite_clf = converter_clf.convert()
+    converter_clf = tf.lite.TFLiteConverter.from_keras_model(mlp_classifier)
     with open('saved_models/classifier.tflite', 'wb') as f:
-        f.write(tflite_clf)
+        f.write(converter_clf.convert())
         
-    print(f"\nPipeline execution for {dataset.upper()} complete!")
+    print("\nPipeline execution complete! TFLite models and Scaler saved.")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train ML Pipeline")
-    parser.add_argument('--dataset', type=str, default='synthetic', choices=['synthetic', 'cwru', 'mimii'], help="Dataset to use")
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--dataset', type=str, default='cwru', choices=['cwru', 'mimii', 'ib'])
     args = parser.parse_args()
     main(dataset=args.dataset)

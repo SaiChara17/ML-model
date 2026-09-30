@@ -1,0 +1,4 @@
+Dataset,Data Type,Samples Used,Classes,Sampling Rate,Feature Extraction,Model,Test Accuracy,5-Fold CV,Role
+MIMII,Machine audio,4,2,16 kHz,Time-domain,Not trained,N/A,N/A,EDA / Reference
+CWRU,Bearing vibration,4,4,12 kHz,Time-domain,Not trained,N/A,N/A,EDA / Reference
+IB,Bearing vibration,178,9,17.85 kHz,Time + FFT,Random Forest,94.44%,97.76%,ML Model Development

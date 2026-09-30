@@ -1,0 +1,379 @@
+
+EDGE-BASED MACHINE HEALTH MONITORING USING MULTI-SENSORS
+==========================================================
+
+1. INTRODUCTION
+----------------
+Machine health monitoring is an important part of predictive
+maintenance. Traditional maintenance methods may depend on
+fixed schedules or manual inspection, which can result in
+unnecessary maintenance or unexpected machine failures.
+
+Machine-condition signals such as vibration, acoustic signals,
+temperature and current contain information about the operating
+condition of equipment. Signal processing and machine-learning
+methods can be used to extract useful characteristics from
+these signals and classify different machine conditions.
+
+This project investigates a data-processing and machine-learning
+baseline for an edge-based machine health monitoring system.
+The work analyzes MIMII, CWRU and Intelligent Bearing datasets
+and investigates both time-domain and frequency-domain features.
+
+
+2. PROBLEM STATEMENT
+--------------------
+Industrial machines generate signals that can contain early
+indications of abnormal operating conditions. Processing these
+signals only after sending all raw data to a remote system can
+increase communication requirements and response time.
+
+Therefore, there is a need for a machine health monitoring
+approach that can extract useful signal characteristics and
+perform condition classification efficiently, with the eventual
+goal of deploying the processing and prediction system on an
+edge device.
+
+
+3. OBJECTIVES
+-------------
+The main objectives of the project are:
+
+1. Analyze publicly available machine-condition datasets.
+2. Perform exploratory data analysis on the collected signals.
+3. Check missing values, invalid values and duplicate samples.
+4. Extract meaningful time-domain signal features.
+5. Apply FFT for frequency-domain feature extraction.
+6. Compare time-domain and combined time-frequency features.
+7. Develop a machine-learning baseline model.
+8. Evaluate model performance using train, validation, test and
+   cross-validation results.
+9. Identify important features using Random Forest feature
+   importance.
+10. Establish a baseline for future multi-sensor edge deployment.
+
+
+4. DATASETS
+-----------
+Three datasets were considered.
+
+4.1 MIMII DATASET
+-----------------
+The MIMII dataset contains machine operating sounds collected
+from industrial equipment. In this project, a small public
+subset containing normal and abnormal machine audio samples
+was used for exploratory analysis.
+
+Sampling rate used: 16 kHz
+Samples used: 4
+Data type: Audio
+
+
+4.2 CWRU DATASET
+----------------
+The Case Western Reserve University bearing dataset contains
+vibration measurements from bearings under different operating
+and fault conditions.
+
+The selected recordings represented normal operation and
+different bearing fault categories.
+
+Sampling rate used: 12 kHz
+Samples used: 4
+Data type: Bearing vibration
+
+
+4.3 INTELLIGENT BEARING DATASET
+-------------------------------
+The public Intelligent Bearing dataset used in this project
+contains vibration measurements collected using an
+accelerometer.
+
+Number of samples: 178
+Number of classes: 9
+Sampling rate: 17.85 kHz
+Data type: Vibration
+
+
+5. DATA PREPROCESSING
+---------------------
+The datasets were loaded and checked for data-quality issues.
+
+The following checks were performed:
+
+- Missing values
+- Infinite values
+- Duplicate samples
+- Minimum and maximum values
+- Mean and standard deviation
+- Class distribution
+
+The analysis showed no missing or infinite values in the
+processed IB dataset and no duplicate samples.
+
+
+6. FEATURE EXTRACTION
+---------------------
+Time-domain features were extracted from the raw signals.
+
+The following five time-domain features were used:
+
+1. Mean
+2. Standard Deviation
+3. Minimum
+4. Maximum
+5. RMS
+
+These features describe the amplitude and statistical
+characteristics of the machine signal.
+
+
+7. FREQUENCY-DOMAIN FEATURE EXTRACTION
+--------------------------------------
+Fast Fourier Transform (FFT) was applied to the IB vibration
+signals to analyze their frequency characteristics.
+
+Four frequency-domain features were extracted:
+
+1. Dominant Frequency
+2. Maximum FFT Magnitude
+3. Spectral Energy
+4. Spectral Centroid
+
+The frequency-domain features were combined with the five
+time-domain features.
+
+Therefore, the final feature set contained nine features.
+
+
+8. DATA SPLITTING
+-----------------
+The IB dataset was divided using stratified sampling.
+
+The resulting split was:
+
+Training samples: 142
+Validation samples: 18
+Test samples: 18
+
+Stratification was used to maintain class representation
+across the datasets.
+
+For preprocessing, scaling was fitted only using the training
+data to avoid data leakage.
+
+
+9. MACHINE LEARNING MODEL
+-------------------------
+A Random Forest classifier was selected as the baseline
+machine-learning model.
+
+Model configuration:
+
+Algorithm: Random Forest
+Number of trees: 100
+Random state: 42
+
+Two feature configurations were evaluated:
+
+Model 1:
+Five time-domain features.
+
+Model 2:
+Five time-domain features + four FFT features.
+
+
+10. MODEL PERFORMANCE
+---------------------
+The five-feature model achieved a mean 5-fold cross-validation
+accuracy of approximately 94.37%.
+
+The nine-feature model achieved a mean 5-fold cross-validation
+accuracy of approximately 97.76%.
+
+Therefore, the addition of FFT-derived features improved the
+mean cross-validation accuracy by approximately 3.40 percentage
+points.
+
+
+11. FINAL MODEL RESULTS
+-----------------------
+The final nine-feature Random Forest model produced the
+following results:
+
+Training Accuracy: 100.00%
+Validation Accuracy: 94.44%
+Test Accuracy: 94.44%
+
+5-Fold Cross-Validation Mean: 97.76%
+5-Fold Cross-Validation Standard Deviation: 2.08%
+
+Minimum CV Accuracy: 94.44%
+Maximum CV Accuracy: 100.00%
+
+
+12. CLASS-WISE PERFORMANCE
+--------------------------
+The held-out test set contained 18 samples.
+
+Most classes were correctly classified.
+
+The main classification error occurred between IB Class 4
+and IB Class 5, where one Class 4 sample was classified as
+Class 5.
+
+The resulting test accuracy was 94.44%.
+
+
+13. FEATURE IMPORTANCE
+----------------------
+Random Forest feature importance was calculated to identify
+features that contributed most strongly to the classification
+model.
+
+The final feature ranking was generated from the model trained
+on all 178 IB samples.
+
+The feature-importance results can be found in:
+
+IB_Final_Feature_Importance.csv
+
+
+14. RESULTS AND DISCUSSION
+--------------------------
+The experimental results indicate that both time-domain and
+frequency-domain characteristics contain useful information
+for machine-condition classification.
+
+The five-feature model provided a reasonable baseline using
+simple statistical signal characteristics.
+
+After adding FFT-derived features, the mean 5-fold
+cross-validation accuracy increased from approximately 94.37%
+to 97.76%.
+
+This indicates that frequency information can provide additional
+discriminative information for the IB dataset.
+
+However, the results should not be interpreted as guaranteed
+real-world deployment accuracy because the available dataset
+contains only 178 samples.
+
+
+15. ROLE OF MIMII AND CWRU
+--------------------------
+MIMII and CWRU were included in the project to study different
+machine-condition signal types and to support exploratory
+analysis.
+
+Only four recordings from each dataset were available in the
+current experiment.
+
+Therefore, these datasets were not used to train a reliable
+machine-learning model.
+
+They were treated as EDA/reference datasets rather than
+claiming machine-learning accuracy from very small samples.
+
+
+16. LIMITATIONS
+---------------
+The project has several limitations.
+
+1. The available MIMII subset contains only four recordings.
+
+2. The available CWRU subset contains only four recordings.
+
+3. The IB dataset contains 178 samples, which is relatively
+   small for strong generalization claims.
+
+4. The public IB experiment uses a single accelerometer rather
+   than the complete proposed multi-sensor hardware setup.
+
+5. Sample-level cross-validation may produce optimistic results
+   if multiple samples are correlated with the same physical
+   bearing or operating run.
+
+6. The current experiment has not yet demonstrated real-time
+   edge deployment.
+
+
+17. FUTURE WORK
+---------------
+Future development will focus on the actual multi-sensor
+edge-based machine health monitoring system.
+
+Possible future work includes:
+
+1. Vibration sensor integration.
+2. Acoustic sensor integration.
+3. Temperature sensor integration.
+4. Motor current sensing.
+5. Multi-sensor data fusion.
+6. Collection of larger real-world datasets.
+7. Testing under different loads and speeds.
+8. Group-aware model evaluation.
+9. Comparison with SVM, gradient boosting and deep-learning
+   models.
+10. Deployment on an edge computing platform.
+11. Real-time fault detection.
+12. Evaluation of processing latency, memory usage and power
+   consumption.
+
+
+18. CONCLUSION
+--------------
+This project developed a complete data-processing and
+machine-learning baseline for machine health monitoring.
+
+MIMII, CWRU and Intelligent Bearing datasets were analyzed.
+Time-domain statistical features and FFT-based frequency-domain
+features were extracted.
+
+A Random Forest classifier using nine combined features achieved
+94.44% accuracy on the held-out IB test set and 97.76% mean
+accuracy across 5-fold cross-validation.
+
+The addition of frequency-domain features improved the
+cross-validation performance compared with using only
+time-domain features.
+
+The current work establishes the software and signal-processing
+foundation for the proposed edge-based machine health monitoring
+system. Future work will integrate multiple physical sensors,
+perform sensor fusion and deploy the model on an edge platform
+for real-time monitoring.
+
+
+19. PROJECT FILES
+-----------------
+Important generated files include:
+
+Processed data:
+- MIMII_processed.csv
+- CWRU_processed.csv
+- IB_processed.csv
+- IB_Time_Frequency_Features.csv
+
+Model results:
+- IB_Model_Comparison.csv
+- IB_Classwise_Performance.csv
+- IB_5_vs_9_Feature_CV_Comparison.csv
+- IB_Final_Model_Selection.csv
+- IB_Final_Evaluation_Summary.csv
+
+Model:
+- IB_RandomForest_Final.joblib
+- IB_Final_Features.joblib
+
+Graphs:
+- 01_IB_Class_Distribution.png
+- 02_IB_RMS_By_Class.png
+- 03_IB_Feature_Importance.png
+- 04_5_vs_9_Feature_CV.png
+- 05_IB_Final_Confusion_Matrix.png
+- 06_IB_Final_Model_Accuracy.png
+
+
+END OF REPORT CONTENT
+=====================

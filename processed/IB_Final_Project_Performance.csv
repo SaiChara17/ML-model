@@ -1,0 +1,16 @@
+Metric,Value
+Dataset,Public Intelligent Bearing (IB) Dataset
+Total Samples,178
+Number of Classes,9
+Number of Features,9
+Model,Random Forest - 100 Trees
+Training Accuracy,1.0
+Validation Accuracy,0.944444
+Test Accuracy,0.9444444444444444
+5-Fold CV Mean Accuracy,0.9776190476190477
+5-Fold CV Standard Deviation,0.020831783767013237
+Minimum CV Accuracy,0.9444444444444444
+Maximum CV Accuracy,1.0
+5-Feature CV Mean Accuracy,0.9436507936507935
+9-Feature CV Mean Accuracy,0.9776190476190477
+FFT Feature Improvement,0.0339682539682542

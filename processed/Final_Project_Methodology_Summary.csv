@@ -1,0 +1,19 @@
+Stage,Description
+1. Dataset Collection,"Collected MIMII, CWRU and public IB datasets."
+2. Dataset Organization,Organized datasets into separate project folders.
+3. Data Loading,"Loaded WAV, MAT and CSV-compatible data using Python."
+4. Data Quality Check,"Checked missing values, infinite values and duplicate samples."
+5. Exploratory Data Analysis,"Analyzed class distribution, signal statistics and feature ranges."
+6. Time-Domain Feature Extraction,"Extracted Mean, Standard Deviation, Min, Max and RMS."
+7. Frequency-Domain Feature Extraction,"Applied FFT to extract dominant frequency, FFT magnitude, spectral energy and spectral centroid."
+8. Feature Combination,Combined time-domain and frequency-domain features for IB.
+9. Class Distribution Analysis,Checked the number of samples available for each class.
+10. Train/Validation/Test Split,Used stratified splitting for the IB model experiment.
+11. Data Scaling,Fitted the scaler only on training data to avoid data leakage.
+12. Baseline Model,Trained a Random Forest using five time-domain features.
+13. FFT Feature Model,Trained a Random Forest using five time-domain plus four FFT features.
+14. Cross-Validation,Used 5-fold Stratified Cross-Validation to evaluate model stability.
+15. Model Evaluation,"Evaluated training, validation and held-out test performance."
+16. Feature Importance,Calculated Random Forest feature importance.
+17. Final Model Selection,Selected the 9-feature Random Forest as the final baseline.
+18. Model Saving,Saved the final Random Forest model and feature list.

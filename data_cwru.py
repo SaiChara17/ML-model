@@ -35,7 +35,6 @@ def load_cwru_data(window_size=1024, max_windows_per_file=200):
     """
     download_cwru()
     
-    audio_data = []
     vibration_data = []
     labels = []
     
@@ -70,11 +69,7 @@ def load_cwru_data(window_size=1024, max_windows_per_file=200):
             end = start + window_size
             vib_chunk = raw_vibration[start:end]
             
-            # CWRU benchmark trick: Feed zeros to the audio channel
-            audio_chunk = np.zeros(window_size)
-            
-            audio_data.append(audio_chunk)
             vibration_data.append(vib_chunk)
             labels.append(label_map[state])
             
-    return np.array(audio_data), np.array(vibration_data), np.array(labels)
+    return np.array(vibration_data), np.array(labels)

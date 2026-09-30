@@ -1,0 +1,10 @@
+Item,Value
+Selected Model,Random Forest - 9 Time + FFT Features
+Number of Features,9
+Feature Type,Time-domain + Frequency-domain FFT
+Test Accuracy,0.9444444444444444
+5-Fold CV Mean Accuracy,0.9776190476190477
+5-Fold CV Std Deviation,0.020831783767013237
+CV Minimum Accuracy,0.9444444444444444
+CV Maximum Accuracy,1.0
+Improvement Over 5-Feature Model,0.0339682539682542

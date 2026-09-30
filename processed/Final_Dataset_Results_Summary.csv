@@ -1,0 +1,4 @@
+Dataset,Samples Used,Classes,Sampling Rate,Sensor/Data Type,Main Features,ML Model,Test Accuracy,5-Fold CV Accuracy,Purpose
+MIMII,4,2,16 kHz,Microphone / Audio,Time-domain,Not trained,N/A,N/A,EDA / Reference
+CWRU,4,4,12 kHz,Bearing Vibration,Time-domain,Not trained,N/A,N/A,EDA / Reference
+IB,178,9,17.85 kHz,Accelerometer Vibration,Time + FFT,Random Forest,94.44%,97.76%,Model Development

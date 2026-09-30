@@ -1,44 +1,42 @@
+import os
+import librosa
 import numpy as np
 
-def load_mimii_data(num_samples=150, length=1024):
+def load_mimii_data(data_dir='data/mimii', window_size=1024, sr=16000):
     """
-    NOTE: The real MIMII dataset is hosted on Zenodo as massive 5GB+ zip files.
-    To prevent script freezing and bandwidth exhaustion, this function simulates 
-    highly realistic MIMII acoustic data (Fan hum, valve clatter, beat frequencies) 
-    instead of downloading a 5GB zip.
+    Loads real MIMII dataset audio files (.wav).
+    MIMII is strictly an acoustic dataset. No fake vibration data is generated.
     
-    Because MIMII is only audio, we return dummy zero-arrays for vibration.
+    Users must download the MIMII dataset from Zenodo and place .wav files in:
+    - data/mimii/normal/
+    - data/mimii/abnormal/
     """
-    print("Generating simulated MIMII acoustic data (Avoiding 5GB Zenodo download)...")
-    
     audio_data = []
-    vibration_data = []
     labels = []
     
-    t = np.linspace(0, 1, length, endpoint=False)
+    label_map = {'normal': 0, 'abnormal': 1}
     
-    for _ in range(num_samples):
-        # 0: Normal Fan Acoustic Hum
-        aud_normal = 0.5 * np.sin(2 * np.pi * 60 * t) + np.random.normal(0, 0.05, length)
-        # Dummy vibration
-        vib_dummy = np.zeros(length)
+    if not os.path.exists(data_dir):
+        print(f"Warning: {data_dir} not found. Please download MIMII dataset.")
+        return np.array([]), np.array([])
         
-        audio_data.append(aud_normal)
-        vibration_data.append(vib_dummy)
-        labels.append(0)
-        
-    for _ in range(num_samples // 2):
-        # 1: Abnormal Valve Clatter (High freq spikes)
-        clatter = np.random.normal(0, 0.5, length) * (np.sin(2 * np.pi * 10 * t) > 0.8)
-        aud_valve = 0.5 * np.sin(2 * np.pi * 60 * t) + clatter + np.random.normal(0, 0.1, length)
-        audio_data.append(aud_valve)
-        vibration_data.append(np.zeros(length))
-        labels.append(1)
-        
-        # 2: Abnormal Fan Imbalance (Acoustic beat frequencies)
-        aud_imbalance = 0.8 * np.sin(2 * np.pi * 60 * t) + 0.3 * np.sin(2 * np.pi * 65 * t) + np.random.normal(0, 0.1, length)
-        audio_data.append(aud_imbalance)
-        vibration_data.append(np.zeros(length))
-        labels.append(2)
-        
-    return np.array(audio_data), np.array(vibration_data), np.array(labels)
+    for state, label_val in label_map.items():
+        state_dir = os.path.join(data_dir, state)
+        if not os.path.exists(state_dir):
+            continue
+            
+        for filename in os.listdir(state_dir):
+            if filename.endswith('.wav'):
+                filepath = os.path.join(state_dir, filename)
+                # Load audio
+                y, _ = librosa.load(filepath, sr=sr)
+                
+                # Segment into windows
+                num_windows = len(y) // window_size
+                for i in range(num_windows):
+                    start = i * window_size
+                    end = start + window_size
+                    audio_data.append(y[start:end])
+                    labels.append(label_val)
+                    
+    return np.array(audio_data), np.array(labels)

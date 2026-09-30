@@ -1,30 +1,36 @@
 # Edge-Based Machine Health Monitoring Using Multi-Sensor Data
 
 This repository contains the Machine Learning pipeline for an Edge-Based Predictive Maintenance (PdM) capstone project. 
+It strictly adheres to rigorous academic standards for feature extraction, scaling, and evaluation.
 
 ## Architecture
-The system uses a two-stage learning strategy designed for edge deployment (e.g., Raspberry Pi, ESP32):
-1. **Stage 1 (Anomaly Detection):** An Autoencoder trained on normal machine behavior to identify deviations.
-2. **Stage 2 (Fault Classification):** A 1D-CNN / MLP to classify specific known faults (e.g., Imbalance, Bearing Faults).
+The system uses a two-stage learning strategy designed for edge deployment:
+1. **Stage 1 (Anomaly Detection):** An Autoencoder trained solely on normal machine behavior. It dynamically calculates an anomaly threshold using Mean Squared Error (MSE) reconstruction loss from a validation set.
+2. **Stage 2 (Fault Classification):** A Multi-Layer Perceptron (MLP) to classify specific known faults (e.g., Imbalance, Bearing Faults). A Random Forest baseline is included for academic comparison.
 
-## Sensor Fusion
-The pipeline extracts Time-Domain, Frequency-Domain (FFT), and Mel-Spectrogram (MFCC) features from:
-- Accelerometers (Vibration)
-- INMP441 MEMS Microphones (Acoustic)
-- Current & Temperature sensors
+## Hardware Flow
+`ESP32 -> Laptop -> ML/TFLite Inference`
+* **ESP32:** Performs sensor acquisition from ADXL345 (vibration), INMP441 (acoustic), INA219 (electrical), and DS18B20 (temperature). Streams raw data via Serial/Wi-Fi.
+* **Laptop:** Performs mathematical preprocessing, feature extraction, `StandardScaler` normalization, and AI inference using `.tflite` models.
 
 ## Datasets Supported
-- **CWRU Bearing Dataset**: Automated ingestion of `.mat` files for vibration benchmarking.
-- **MIMII Dataset**: Acoustic benchmarking for industrial machinery.
-- **Synthetic Data**: Integrated generator for rapid pipeline testing.
+We strictly use scientifically valid benchmark datasets without artificial padding or cross-dataset fusion:
+- **CWRU Bearing Dataset**: Used for vibration (FFT/Time-domain) modality benchmarking.
+- **MIMII Dataset**: Used for machine-acoustic (MFCC) anomaly analysis.
+- **Intelligent Bearing (IB) Dataset**: Used for multi-class high-frequency bearing analysis.
 
 ## Usage
 Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
-Train the models (Outputs optimized `.tflite` models for the edge):
+Train the models (Outputs optimized `.tflite` models, `scaler.pkl`, and evaluation metrics):
 ```bash
 cd ml_pipeline
 python train.py --dataset cwru
+```
+Test the hardware Serial handoff:
+```bash
+cd ml_pipeline
+python inference_demo.py
 ```

@@ -1,0 +1,29 @@
+Folder,File,Size_KB,Status
+Processed Files,Combined_Common_Features.csv,20.56,Available
+Processed Files,CWRU_processed.csv,1.03,Available
+Processed Files,Final_Dataset_Results_Summary.csv,0.38,Available
+Processed Files,Final_Project_Methodology_Summary.csv,1.53,Available
+Processed Files,IB_5_vs_9_Feature_CV_Comparison.csv,0.29,Available
+Processed Files,IB_Classwise_Performance.csv,0.54,Available
+Processed Files,IB_Feature_Importance.csv,0.29,Available
+Processed Files,IB_Final_Evaluation_Summary.csv,0.52,Available
+Processed Files,IB_Final_Feature_Importance.csv,0.3,Available
+Processed Files,IB_Final_Model_Results.csv,0.37,Available
+Processed Files,IB_Final_Model_Selection.csv,0.37,Available
+Processed Files,IB_Final_Project_Features.csv,0.36,Available
+Processed Files,IB_Final_Project_Performance.csv,0.53,Available
+Processed Files,IB_Model_Comparison.csv,0.22,Available
+Processed Files,IB_processed.csv,24.92,Available
+Processed Files,IB_Time_Frequency_Features.csv,26.2,Available
+Processed Files,MIMII_processed.csv,0.58,Available
+Processed Files,Report_Ready_Dataset_Results.csv,0.36,Available
+Processed Files,IB_Final_Features.joblib,0.13,Available
+Processed Files,IB_RandomForest_Final.joblib,377.56,Available
+Graphs,01_IB_Class_Distribution.png,62.6,Available
+Graphs,02_IB_RMS_By_Class.png,64.56,Available
+Graphs,03_IB_Feature_Importance.png,102.83,Available
+Graphs,04_5_vs_9_Feature_CV.png,75.25,Available
+Graphs,05_IB_Final_Confusion_Matrix.png,201.4,Available
+Graphs,06_IB_Final_Model_Accuracy.png,85.3,Available
+Models,IB_Final_Features.joblib,0.13,Available
+Models,IB_RandomForest_Final.joblib,377.56,Available

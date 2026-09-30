@@ -1,0 +1,3 @@
+Model,Number_of_Features,Training_Accuracy,Validation_Accuracy,Test_Accuracy
+Random Forest - Time Domain,5,1.0,0.9444444444444444,0.9444444444444444
+Random Forest - Time + Frequency,9,1.0,0.9444444444444444,0.9444444444444444
