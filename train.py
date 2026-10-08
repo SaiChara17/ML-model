@@ -4,7 +4,7 @@ import argparse
 import pickle
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, IsolationForest
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 import tensorflow as tf
 
@@ -72,6 +72,34 @@ def main(dataset='cwru'):
     dynamic_threshold = np.max(mse_val) * 1.05 # Add 5% buffer
     print(f"Dynamic Anomaly Threshold calculated at: {dynamic_threshold:.4f}")
     
+    # Train Isolation Forest (Academic Baseline for Stage 1)
+    print("Training Isolation Forest (Baseline Anomaly Detector)...")
+    iso_forest = IsolationForest(contamination='auto', random_state=42)
+    iso_forest.fit(normal_train)
+    
+    # Evaluate Anomaly Detectors on Test Set
+    true_anomalies = (y_test > 0).astype(int)
+    
+    # Autoencoder predictions
+    reconstructions_test = autoencoder.predict(X_test_scaled, verbose=0)
+    mse_test = np.mean(np.power(X_test_scaled - reconstructions_test, 2), axis=1)
+    ae_anomaly_preds = (mse_test > dynamic_threshold).astype(int)
+    
+    # Isolation Forest predictions (outputs 1 for normal, -1 for anomaly)
+    iso_preds_raw = iso_forest.predict(X_test_scaled)
+    iso_anomaly_preds = (iso_preds_raw == -1).astype(int)
+    
+    print("\n========================================================")
+    print(f"--- STAGE 1 (ANOMALY DETECTION) EVALUATION ---")
+    print(f"========================================================\n")
+    print("== Deep Autoencoder Metrics ==")
+    print(f"Accuracy:  {accuracy_score(true_anomalies, ae_anomaly_preds):.4f}")
+    print(f"F1-Score:  {f1_score(true_anomalies, ae_anomaly_preds):.4f}")
+    
+    print("\n== Isolation Forest (Baseline) Metrics ==")
+    print(f"Accuracy:  {accuracy_score(true_anomalies, iso_anomaly_preds):.4f}")
+    print(f"F1-Score:  {f1_score(true_anomalies, iso_anomaly_preds):.4f}")
+    
     # --- STAGE 2: Fault Classifier Baselines ---
     print("\n--- Training Stage 2: Classifier Baselines ---")
     
@@ -86,9 +114,9 @@ def main(dataset='cwru'):
     rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
     rf_classifier.fit(X_train_scaled, y_train)
     
-    # --- EVALUATION ---
+    # --- STAGE 2 EVALUATION ---
     print("\n========================================================")
-    print(f"--- TEST SET EVALUATION ({dataset.upper()}) ---")
+    print(f"--- STAGE 2 (FAULT CLASSIFICATION) EVALUATION ---")
     print(f"========================================================\n")
     
     # MLP Evaluation
